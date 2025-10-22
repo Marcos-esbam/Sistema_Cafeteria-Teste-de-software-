@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Emitir Nota — Demo</title>
+<style>
+  :root{font-family:Arial,Helvetica,sans-serif;color:#222}
+  body{margin:0;background:#f6f7fb;padding:24px}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 14px}
+  .cart{background:#fff;padding:14px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+  .cart ul{list-style:none;padding:0;margin:0}
+  .cart li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eee}
+  .cart li:last-child{border-bottom:0}
+  .actions{margin-top:12px;display:flex;gap:8px;justify-content:flex-end}
+  button{cursor:pointer;padding:8px 12px;border-radius:6px;border:0;background:#1e68ad;color:#fff}
+  button.ghost{background:#aaa}
+  /* Modal / Receipt */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
+  .receipt{width:720px;max-width:96%;background:#fff;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,0.25);overflow:hidden}
+  .rec-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #eee}
+  .rec-body{padding:16px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 6px;text-align:left;border-bottom:1px dashed #e9e9e9}
+  .totals{margin-top:12px;font-size:15px}
+  .total{font-weight:700;font-size:18px;margin-top:6px}
+  .rec-foot{padding:12px;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end}
+  .muted{color:#666;font-size:13px}
+  /* print adjustments */
+  @media print{
+    .overlay{background:white;position:static;display:block}
+    .rec-foot, .no-print{display:none !important}
+    .receipt{box-shadow:none;border-radius:0}
+  }
+  /* small helper */
+  .small{font-size:13px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Sistema de Cafeteria — Demo: Emitir Nota</h1>
+
+    <!-- Mock do balcão (substitua/integre com o balcão real) -->
+    <div class="cart" id="mockCart">
+      <strong>Itens no balcão (mock)</strong>
+      <ul id="cartList"></ul>
+      <div class="actions">
+        <button id="btnEmit" title="Usa os itens do mock">Emitir nota</button>
+        <button id="btnAdd" class="ghost" title="Adiciona item de teste">Adicionar item (mock)</button>
+      </div>
+    </div>
+
+    <p class="muted small" style="margin-top:10px">
+      Integração: chame <code>window.emitirNotaFromCart(cart, { customerName, paymentMethod })</code>
+      onde <code>cart</code> é um array de itens com <code>{ id, name, qty, price }</code>.
+    </p>
+  </div>
+
+  <!-- Overlay / Receipt -->
+  <div class="overlay" id="overlay">
+    <div class="receipt" role="dialog" aria-labelledby="recTitle">
+      <div class="rec-head">
+        <div>
+          <div id="recTitle"><strong>Comprovante de Compra</strong></div>
+          <div class="muted small" id="recMeta"></div>
+        </div>
+        <div class="small muted" id="recId"></div>
+      </div>
+
+      <div class="rec-body" id="recBody">
+        <!-- tabela de itens gerada por JS -->
+      </div>
+
+      <div class="rec-foot no-print">
+        <button id="printBtn">Imprimir / Salvar PDF</button>
+        <button id="closeBtn" class="ghost">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*
+  Modelo public API:
+  - window.emitirNotaFromCart(cart, options)
+    cart: [{ id, name, qty, price }]
+    options: { customerName?, paymentMethod?, date? }
+*/
+(function(){
+  // util: formata em pt-BR
+  const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  // calcula totals em centavos para evitar float issues
+  function calcTotals(items){
+    let subtotalCents = 0;
+    const rows = items.map(it => {
+      const qty = Number(it.qty) || 1;
+      const priceNum = Number(it.price) || 0;
+      const priceCents = Math.round(priceNum * 100);
+      const lineCents = priceCents * qty;
+      subtotalCents += lineCents;
+      return Object.assign({}, it, { qty, priceNum, priceCents, lineCents });
+    });
+    return { rows, subtotalCents, subtotal: subtotalCents / 100 };
+  }
+
+  function buildReceiptHtml(order){
+    const { rows, subtotalCents } = calcTotals(order.items);
+    const date = order.date ? new Date(order.date) : new Date();
+    const id = order.id || `PED-${date.getTime()}`;
+
+    // tabela
+    let html = '<table aria-label="Itens da compra"><thead><tr><th>Produto</th><th>Qt</th><th>Preço</th><th>Subtotal</th></tr></thead><tbody>';
+    for(const r of rows){
+      html += `<tr>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${r.qty}</td>
+        <td>${fmt.format(r.priceCents/100)}</td>
+        <td>${fmt.format(r.lineCents/100)}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+
+    // totais e metadados
+    html += `<div class="totals">
+      <div>Subtotal: <strong>${fmt.format(subtotalCents/100)}</strong></div>
+      <div class="total">TOTAL: <strong>${fmt.format(subtotalCents/100)}</strong></div>
+    </div>`;
+
+    if(order.customerName){
+      html += `<div style="margin-top:8px">Cliente: ${escapeHtml(order.customerName)}</div>`;
+    }
+    if(order.paymentMethod){
+      html += `<div>Pagamento: ${escapeHtml(order.paymentMethod)}</div>`;
+    }
+
+    // meta footer (não imprimir)
+    const meta = { id, date: date.toLocaleString() };
+    return { html, meta };
+  }
+
+  // XSS-safe basic escape
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // DOM refs
+  const overlay = document.getElementById('overlay');
+  const recBody = document.getElementById('recBody');
+  const recMeta = document.getElementById('recMeta');
+  const recId = document.getElementById('recId');
+  const printBtn = document.getElementById('printBtn');
+  const closeBtn = document.getElementById('closeBtn');
+
+  // show/hide
+  function showOverlay(){ overlay.style.display = 'flex'; window.scrollTo(0,0); }
+  function hideOverlay(){ overlay.style.display = 'none'; }
+
+  // main: renderizar nota
+  function emitirNota(order){
+    if(!order || !Array.isArray(order.items) || order.items.length === 0){
+      alert('Nenhum item na nota. O balcão deve passar um array de itens.');
+      return;
+    }
+    const { html, meta } = buildReceiptHtml(order);
+    recBody.innerHTML = html;
+    recMeta.textContent = meta.date;
+    recId.textContent = meta.id;
+    showOverlay();
+  }
+
+  // make available to global for integration
+  window.emitirNotaFromCart = function(cart, options){
+    // defensivo: transformar strings nums se necessário
+    const items = (Array.isArray(cart) ? cart : []).map(it => ({
+      id: it.id ?? (it.name ?? '') + Math.random().toString(36).slice(2,7),
+      name: it.name ?? 'Produto sem nome',
+      qty: Number(it.qty) || 1,
+      price: Number(it.price) || 0
+    }));
+    const order = Object.assign({}, options || {}, { items });
+    emitirNota(order);
+  };
+
+  // ligar botões internos
+  printBtn.addEventListener('click', () => {
+    // abrir diálogo de impressão do navegador
+    window.print();
+  });
+  closeBtn.addEventListener('click', hideOverlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) hideOverlay(); // clicar fora fecha
+  });
+
+  // --- Mock UI (apenas para demo/local) ---
+  let mockCart = [
+    { id: 'p1', name: 'Café Expresso', qty: 1, price: 4.5 },
+    { id: 'p2', name: 'Pão de Queijo', qty: 2, price: 3.0 },
+  ];
+
+  function renderMockCart(){
+    const ul = document.getElementById('cartList');
+    ul.innerHTML = '';
+    for(const it of mockCart){
+      const li = document.createElement('li');
+      li.innerHTML = `<span>${escapeHtml(it.name)}</span><span>${it.qty} x ${fmt.format(Number(it.price)||0)}</span>`;
+      ul.appendChild(li);
+    }
+  }
+  document.getElementById('btnEmit').addEventListener('click', () => {
+    // usa a API global; exemplo de options
+    window.emitirNotaFromCart(mockCart, { customerName: 'Cliente Demo', paymentMethod: 'Dinheiro' });
+  });
+  document.getElementById('btnAdd').addEventListener('click', () => {
+    mockCart.push({ id: 'p'+(Math.random()*1000|0), name: 'Suco Natural', qty: 1, price: 6.25 });
+    renderMockCart();
+  });
+
+  renderMockCart();
+
+  // For debugging / dev: expose mock
+  window._mockCart = mockCart;
+
+})();
+</script>
+</body>
+</html>
