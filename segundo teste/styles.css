@@ -1,0 +1,139 @@
+/* FILE: styles.css */
+:root{
+  --prim:#4B2E2A; /* marrom café */
+  --sec:#c47a3b;  /* caramelo */
+  --bg:#F6F2EE;   /* off-white */
+  --cta:#D86A2B;  /* laranja queimado */
+  --text:#2B2B2B;  /* cinza escuro */
+  --muted:#7a6f65;
+}
+*{box-sizing:border-box}
+body{font-family:Inter, Arial,
+     Helvetica, sans-serif;
+     margin:0;
+     background:var(--bg);
+     color:var(--text);
+     -webkit-font-smoothing:antialiased}
+.container{max-width:1600px;
+    max-height: 160px;
+    margin:0 auto;
+    padding:20px}
+.site-header{
+  background:var(--bg);
+  background-color: #8daa4a;
+  border-bottom:4px solid rgba(0,0,0,0.03)
+}
+.header-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+.brand-wrap{display:flex;gap:14px;align-items:left}
+.logo{
+  width:130px;
+  height:130px;
+  object-fit:contain;
+  border-radius:10px;
+}
+.brand{margin:0;
+  font-size:38px;
+  color:var(--prim);letter-spacing:0.2px}
+.tag{margin:4px 0 0;color:var(--muted);font-size:14px}
+.top-actions{display:flex;gap:8px}
+.main-grid{display:grid;grid-template-columns:1fr 360px;gap:22px;margin-top:22px}
+.card{background:linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.98) 100%);padding:18px;border-radius:14px;box-shadow:0 10px 30px rgba(75,46,42,0.06)}
+.card h2{margin:0 0 12px;font-size:20px;color:var(--prim)}
+.products-list{
+    
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:grid;
+    gap:12px}
+.product{
+    display:flex;
+    height: 80px;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px;
+    border-radius:12px;
+    background:linear-gradient(90deg,var(--sec)30%,#fff 100%); 
+    border:1px solid rgba(0,0,0,0.03);
+    
+  }
+.product .info{display:flex;gap:12px;align-items:center}
+.product .name{font-weight:700;font-size:18px;color:var(--text)}
+.product .cat{
+  font-size:20px;
+  color:var(--bg)}
+.price{
+  font-weight:800;
+  font-size:16px;
+  color:var(--prim)}
+.btn{
+  padding:10px 14px;
+  border-radius:5px;
+  border:0;
+  cursor:pointer;
+  font-weight:700;
+  font-size: 21px;
+}
+.btn-cta{background:var(--cta);color:#fff}
+.btn-secondary{
+  background:var(--sec);
+  color:var(--text)}
+button:hover {
+  background-color: #D86A2B;
+  box-shadow: 0 4px 12px rgba(216, 106, 43, 0.4);
+  transform: translateY(-2px);
+}
+.btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.05)}
+.carrinho .cart-list{list-style:none;padding:0;margin:0;max-height:420px;overflow:auto}
+.cart-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(75,46,42,0.06)}
+.cart-item .qty{margin-right:8px;color:var(--muted)}
+.cart-summary{margin-top:16px;font-size:16px}
+.cart-summary .line{display:flex;justify-content:space-between;padding:8px 0}
+.cart-summary .total{font-size:18px;font-weight:800;color:var(--prim)}
+.actions{margin-top:14px;display:flex;gap:10px}
+.muted{color:var(--muted)}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);padding:20px;z-index:999}
+.overlay[aria-hidden="false"]{display:flex}
+.receipt{width:760px;max-width:96%;background:#fff;border-radius:10px;overflow:hidden}
+.rec-head{display:flex;justify-content:space-between;gap:12px;padding:16px;border-bottom:1px solid #f1f5f9}
+.rec-head h3{margin:0;font-size:20px;color:var(--prim)}
+.rec-meta{font-size:14px;color:var(--muted);text-align:right}
+.rec-body{padding:18px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;text-align:left;border-bottom:1px dashed #eee;font-size:15px}
+.rec-foot{padding:14px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:10px}
+.no-print{display:block}
+@media print{.no-print{display:none !important}.overlay{background:white;position:static}}
+
+/* responsive */
+@media (max-width:900px){
+  .main-grid{grid-template-columns:1fr;}
+  .logo{width:64px;
+    height:64px}
+  .brand{font-size:20px}
+}
+/* aumenta altura mínima do cardápio */
+.card.cardapio {
+  min-height: 640px; /* ou 700px - escolhe o valor que preferir */
+  display: flex;
+  flex-direction: column;
+}
+
+/* base: define um tamanho um pouco maior consistente */
+.product .name { font-size: 1.55rem; /* ~20px se root=16px */ font-weight:700; }
+.price           { font-size: 1.125rem; /* ~18px */ font-weight:800; }
+
+/* adapta pra celular */
+@media (max-width: 900px) {
+  .product .name { font-size: 1.05rem; }
+  .price         { font-size: 1rem; }
+}
+
+.payment-card { background: linear-gradient(90deg, rgba(166,123,91,0.06), #fff); border: 1px solid rgba(75,46,42,0.04); }
+.pay-option { display:flex;align-items:center;gap:8px;font-weight:700;color:var(--text); }
+#cashReceived { border-radius:8px;padding:8px;border:1px solid rgba(0,0,0,0.06) }
+#changeInfo { font-weight:700;color:var(--prim); }

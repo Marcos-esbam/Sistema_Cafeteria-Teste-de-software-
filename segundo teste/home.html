@@ -1,0 +1,97 @@
+<!-- FILE: index.html -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hórus • Balcão — Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand-wrap">
+        <img src="logo-cafeteria.PNG" alt="Logo Cafeteria" class="logo">
+        <div>
+          <h1 class="brand">Sistema de Cafeteria</h1>
+          <p class="tag">Balcão • selecionar produtos • emitir nota</p>
+        </div>
+      </div>
+      <nav class="top-actions">
+        <button class="btn btn-cta" id="btnOffers">Ofertas</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <!-- Cardápio -->
+    <section class="card cardapio" aria-labelledby="cardapio-title">
+      <h2 id="cardapio-title">Cardápio</h2>
+      <ul id="productsList" class="products-list" role="list"></ul>
+    </section>
+
+    <!-- Carrinho / Ações -->
+    <aside class="card carrinho" aria-labelledby="carrinho-title">
+      <h2 id="carrinho-title">Carrinho</h2>
+      <div id="cartEmpty" class="muted">Seu carrinho está vazio.</div>
+      <ul id="cartList" class="cart-list" role="list"></ul>
+
+      <div class="cart-summary">
+        <div class="line"><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
+        <div class="line total"><span>TOTAL</span><strong id="total">R$ 0,00</strong></div>
+      </div>
+
+      <!-- INÍCIO: Seção de Pagamento (cole dentro do aside carrinho, antes das actions) -->
+<div class="payment-card card" style="margin-top:12px;padding:12px;border-radius:10px;">
+  <h3 style="margin:0 0 8px;font-size:16px;color:var(--prim)">Forma de pagamento</h3>
+
+  <div id="paymentMethods" style="display:flex;flex-direction:column;gap:8px">
+    <label class="pay-option"><input type="radio" name="pay" value="dinheiro"> Dinheiro</label>
+    <label class="pay-option"><input type="radio" name="pay" value="cartao"> Cartão (déb/cred)</label>
+    <label class="pay-option"><input type="radio" name="pay" value="pix"> PIX</label>
+    <label class="pay-option"><input type="radio" name="pay" value="vale"> Vale</label>
+  </div>
+
+  <div id="cashBox" style="margin-top:10px;display:none">
+    <label class="muted">Valor recebido:</label>
+    <input id="cashReceived" type="number" min="0" step="0.01" placeholder="R$ 0,00" style="width:100%;padding:8px;border-radius:8px;border:1px solid #eee;margin-top:6px">
+    <div id="changeInfo" class="muted" style="margin-top:8px"></div>
+  </div>
+</div>
+<!-- FIM: Seção de Pagamento -->
+
+      <div class="actions">
+        <button id="btnEmitir" class="btn btn-cta" disabled>Emitir nota</button>
+        <button id="btnClear" class="btn btn-secondary" disabled>Limpar</button>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Receipt Modal -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="receipt" role="dialog" aria-labelledby="recTitle">
+      <header class="rec-head">
+        <h3 id="recTitle">Comprovante de Compra</h3>
+        <div class="rec-meta">
+          <div id="recId">Pedido: -</div>
+          <div id="recDate">-</div>
+        </div>
+      </header>
+
+      <div class="rec-body" id="recBody">
+        <!-- Tabela gerada por JS -->
+      </div>
+
+      <footer class="rec-foot no-print">
+        <button id="btnPrint" class="btn btn-cta">Imprimir / Salvar PDF</button>
+        <button id="btnClose" class="btn btn-secondary">Fechar</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
+
+
